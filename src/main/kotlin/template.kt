@@ -28,4 +28,4 @@ fun main() {
 private const val checkInput: String = "" +
         ""
 
-private val testInput by lazy { readResourceFile("/advent2020/dayXX-task1.txt") }
+private val testInput by lazy { readResourceFile("/advent2021/dayXX-task1.txt") }
