@@ -70,31 +70,11 @@ Determine the horizontal position that the crabs can align to using the least fu
 private class Day07(
     private val positions: List<Int>
 ) {
-    fun solve(): Int = positions.minOf { p -> positions.sumOf { abs(it - p) } }
-    fun solve2(): Int = (positions.sum() / positions.size).let { avg ->
-        var x = avg
-        while (totalDistance(x + 1) < totalDistance(x)) x++
-        while (totalDistance(x - 1) < totalDistance(x)) x--
-        return@let totalDistance(x)
-    }
+    fun solve(): Int = positions.sorted()[positions.size / 2].let { totalDistance1(it) }
+    fun solve2(): Int = (1.0 * positions.sum() / positions.size).let { totalDistance2(it.roundToInt())}
 
-    private fun totalDistance(x: Int) = positions.sumOf { abs(it - x).let { n -> n * (n + 1) / 2 } }
-//        squareRoots(positions).let { (r1, r2) ->
-//        val candidates = setOf(r1.toInt(), r1.toInt() + 1, r2.toInt(), r2.toInt() + 1)
-//        candidates.minOf { p -> positions.sumOf { abs(it - p).let { n -> n * (n + 1) / 2 } } }
-//    }
-
-    private fun squareRoots(positions: List<Int>): Pair<Double, Double> {
-        // (x - x1)(x - x1 - 1) + ... + (x - xn)(x - xn - 1) = 0
-        // ax^2 + bx + c = 0
-        val a = positions.size
-        val b = -2 * positions.sum() + a
-        val c = positions.sumOf { it * it } - positions.sum()
-        val d = 1.0 * b * b - 4 * a * c
-        return if (d >= 0) (sqrt(d) - b) / 2 / a to (-sqrt(d) - b) / 2 / a
-        else throw RuntimeException("No real roots for $a x^2 + $b x + $c = 0")
-    }
-
+    private fun totalDistance1(x: Int) = positions.sumOf { abs(it - x) }
+    private fun totalDistance2(x: Int) = positions.sumOf { abs(it - x).let { n -> n * (n + 1) / 2 } }
 
     constructor(testInput: String) : this(testInput.lines().first()
         .split(",").map { it.toInt() }
