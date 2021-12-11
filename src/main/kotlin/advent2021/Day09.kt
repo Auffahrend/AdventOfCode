@@ -4,8 +4,6 @@ import measure
 import readResourceFile
 import verifyResult
 
-typealias Coords = Pair<Int, Int>
-
 /*
 --- Day 9: Smoke Basin ---
 
