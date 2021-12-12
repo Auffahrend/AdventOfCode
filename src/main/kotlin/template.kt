@@ -9,7 +9,7 @@ import kotlin.time.measureTime
  */
 private class DayXX(
 ) {
-    fun solve(): Int {
+    fun solve(): Long {
         TODO("Not yet implemented")
     }
 
