@@ -20,15 +20,23 @@ private class Day21(
             .filter { (it, _) -> limit == null || it.ys.first in limit && it.ys.last in limit }
             .filter { (it, _) -> limit == null || it.zs.first in limit && it.zs.last in limit }
             .fold(emptySet()) { onCubes: Set<Cube>, (cube: Cube, on: Boolean) ->
-                if (onCubes.isEmpty() && on) setOf(cube)
-                else onCubes
-                    .flatMap { if (on) it.union(cube) else it.minus(cube) }
-                    .toSet()
+                (if (on) mergeOnCubes(onCubes, cube)
+                else onCubes.flatMap { it.minus(cube) }.toSet())
                     .also {
                         println("after step ${++step} there are ${it.size} cubes with total volume ${it.sumOf { it.volume() }}")
                     }
             }
         return result.sumOf { it.volume() }
+    }
+
+    private fun mergeOnCubes(onCubes: Set<Cube>, cube: Cube): Set<Cube> {
+        val intersections: Set<Cube> = onCubes.filter { it.intersects(cube) }.toSet()
+        return if (intersections.isEmpty()) onCubes + cube
+        else onCubes.filterNot { it.intersects(cube) }.toSet() +
+                if (intersections.size == 1) intersections.first().union(cube)
+                else intersections.fold(setOf(cube)) { acc, next ->
+                    mergeOnCubes(acc, next)
+                }.toSet()
     }
 
     constructor(testInput: String) : this(
@@ -85,8 +93,6 @@ private class Day21(
 
         private fun isEmpty() = xs.isEmpty() || ys.isEmpty() || zs.isEmpty()
     }
-
-
 }
 
 fun IntRange.intersection(other: IntRange): IntRange? {
@@ -96,18 +102,19 @@ fun IntRange.intersection(other: IntRange): IntRange? {
 
 fun main() {
     listOf(
-        { verifyResult(0, Day21(checkInput0).solve(null)) },
+        { verifyResult(62, Day21(checkInput0).solve(null)) },
         { verifyResult(590784, Day21(checkInput1).solve()) },
-//        { verifyResult(474140, Day21(checkInput).solve()) },
-//        { verifyResult(2758514936282235, Day21(checkInput).solve(null)) },
+        { verifyResult(474140, Day21(checkInput).solve()) },
+        { verifyResult(2758514936282235, Day21(checkInput).solve(null)) },
         { println("Result is " + Day21(testInput).solve(null)) }
     ).onEachIndexed { i, test -> measure(test, i) }
 }
 
 private const val checkInput0: String = "" +
+        "on x=-1..3,y=0..3,z=0..0\n" +
         "on x=0..3,y=0..3,z=0..0\n" +
-        "on x=3..6,y=3..6,z=0..0\n" +
-        "off x=0..7,y=0..7,z=0..2\n"
+        "on x=0..6,y=0..6,z=0..0\n" +
+        "on x=-1..5,y=-1..5,z=0..0\n"
 
 private const val checkInput1 = "" +
         "on x=-20..26,y=-36..17,z=-47..7\n" +
