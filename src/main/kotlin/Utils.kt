@@ -68,7 +68,15 @@ fun sqrRoots(a: Int, b: Int, c: Int): List<Double> {
     return listOf((-b + sqrt(d))/2.0/a, (-b - sqrt(d))/2.0/a)
 }
 
+fun sqr(i: Int): Long = i.toLong() * i
+
 typealias Coords = Pair<Int, Int>
-data class Coords3(val x: Int, val y: Int, val z: Int)
+data class Coords3(val x: Int, val y: Int, val z: Int) {
+    constructor(l: List<Int>): this(l[0], l[1], l[2])
+    operator fun plus(other: Coords3) = Coords3(x + other.x, y + other.y, z + other.z)
+    operator fun minus(other: Coords3) = Coords3(x - other.x, y - other.y, z - other.z)
+}
+
+
 
 private class Utils
