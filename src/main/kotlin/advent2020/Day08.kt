@@ -90,9 +90,13 @@ After the last instruction (acc +6), the program terminates by attempting to run
 Fix the program so that it terminates normally by changing exactly one jmp (to nop) or nop (to jmp). What is the value of the accumulator after the program terminates?
 
  */
-private class Day08(
+private class Day08 {
     private val commands: List<Command>
-) {
+
+    private constructor(commands: List<Command>) {
+        this.commands = commands
+    }
+
     private var acc = 0
     private var code = 0
 
@@ -110,6 +114,7 @@ private class Day08(
                 Operation.ACC -> {
                     acc += commands[code].value; code++
                 }
+
                 Operation.JMP -> code += commands[code].value
             }
         }

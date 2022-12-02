@@ -126,8 +126,8 @@ What code do you use to activate the infrared thermal imaging camera system?
  */
 private class Day13(
 ) {
-    lateinit var initialDots: Set<Coords>
-    lateinit var foldInstructions: List<Fold>
+    private lateinit var initialDots: Set<Coords>
+    private lateinit var foldInstructions: List<Fold>
     fun solve(folds: Int = 0): Int {
         val result = executeFolds(folds)
         result.print()

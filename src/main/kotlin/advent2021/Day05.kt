@@ -78,9 +78,13 @@ You still need to determine the number of points where at least two lines overla
 Consider all of the lines. At how many points do at least two lines overlap?
 
  */
-private class Day05(
+private class Day05 {
     private val lines: List<Line>
-) {
+
+    private constructor(lines: List<Line>) {
+        this.lines = lines
+    }
+
     fun solve(): Int {
         val ventsMap: Map<Vector, Int> = produceVentsMap(lines)
         return ventsMap.count { (_, count) -> count > 1 }

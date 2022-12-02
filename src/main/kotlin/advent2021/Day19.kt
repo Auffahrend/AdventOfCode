@@ -6,12 +6,35 @@ import readResourceFile
 import sqr
 import verifyResult
 
+fun isBalanced(s: String): String {
+    val stack = mutableListOf<Char>()
+    s.toCharArray().forEach { c ->
+        if (closingBrackets.contains(c)) {
+            if (closingBrackets[c]!! != stack.removeAt(0)) return@isBalanced "NO"
+        } else {
+            stack.add(0, c)
+        }
+    }
+    return if (stack.isEmpty()) "YES" else "NO"
+}
+
+private val closingBrackets = mapOf(
+    ')' to '(',
+    '}' to '{',
+    ']' to '['
+)
+
 /*
 
  */
-private class Day19(
-    val scanners: List<Scanner>
-) {
+private class Day19 {
+    private val scanners: List<Scanner>
+
+    private constructor(scanners: List<Scanner>) {
+        this.scanners = scanners
+        this.allOrientations = Facing.values().flatMap { f -> Rotation.values().map { Orientation(f, it) } }
+    }
+
     fun solve(): Long {
         val unplaced = scanners.toMutableList()
         val placed = listOf(unplaced.removeFirst())
@@ -87,6 +110,7 @@ private class Day19(
         }
     )
 
+
     private enum class Facing {
         X, NX, Y, NY, Z, NZ
     }
@@ -97,7 +121,7 @@ private class Day19(
 
     private data class Orientation(val facing: Facing, val rotation: Rotation)
 
-    private val allOrientations = Facing.values().flatMap { f -> Rotation.values().map { Orientation(f, it) } }
+    private val allOrientations: List<Orientation>
 
     private data class Scanner(val id: String, val beacons: Set<Coords3>) {
         fun orient(orientation: Orientation): Scanner = Scanner(id,

@@ -7,8 +7,10 @@ import kotlin.time.measureTime
 /*
 
  */
-private class DayXX(
-) {
+private class DayXX{
+
+    private constructor()
+
     fun solve(): Long {
         TODO("Not yet implemented")
     }
@@ -28,4 +30,4 @@ fun main() {
 private const val checkInput: String = "" +
         ""
 
-private val testInput by lazy { readResourceFile("/advent2021/dayXX-task1.txt") }
+private val testInput by lazy { readResourceFile("/advent2022/dayXX-task1.txt") }

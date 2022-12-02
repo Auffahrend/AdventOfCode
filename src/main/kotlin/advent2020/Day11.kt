@@ -215,9 +215,13 @@ Again, at this point, people stop shifting around and the seating area reaches e
 Given the new visibility method and the rule change for occupied seats becoming empty, once equilibrium is reached, how many seats end up occupied?
 
  */
-private class Day11(
-    private val initialSeats: Seats,
-) {
+private class Day11 {
+    private val initialSeats: Seats
+
+    private constructor(initialSeats: Seats) {
+        this.initialSeats = initialSeats
+    }
+
     val taskPart = 2
 
     fun countOccupiedSeats(): Int {
