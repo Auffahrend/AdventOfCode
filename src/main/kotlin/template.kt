@@ -7,16 +7,11 @@ import kotlin.time.measureTime
 /*
 
  */
-private class DayXX{
-
-    private constructor()
+private class DayXX(testInput: String) {
 
     fun solve(): Long {
         TODO("Not yet implemented")
     }
-
-    constructor(testInput: String) : this(
-    )
 
 }
 
