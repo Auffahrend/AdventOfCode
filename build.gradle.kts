@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val jvmVersion = "17"
+val jvmVersion = "11"
 val kotlinVersion = "1.7.22"
 
 plugins {

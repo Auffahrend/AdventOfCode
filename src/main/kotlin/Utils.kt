@@ -17,6 +17,7 @@ fun measure(test: () -> Unit, i: Int) {
     println("Test $i succeeded in $duration")
 }
 
+typealias Matrix<T> = List<List<T>>
 fun <T> List<List<T>>.deepMutableCopy(): MutableList<MutableList<T>> = this.map { it.toMutableList() }.toMutableList()
 fun <T> List<List<T>>.neighbours4(point: Coords, wrapAround: Boolean = false): List<Coords> = point.let { (x, y) ->
     listOf(-1, 0, 1).flatMap { dx -> listOf(-1, 0, 1).map { dy -> dx to dy } }
@@ -25,6 +26,9 @@ fun <T> List<List<T>>.neighbours4(point: Coords, wrapAround: Boolean = false): L
         .filter { (x, y) -> !wrapAround && y in this.indices && x in this.first().indices }
         .map { point -> if (wrapAround) this.wrapAround(point) else point }
 }
+
+fun <T> List<List<T>>.contains(point: Coords): Boolean =
+    this.indices.contains(point.second) && this[0].indices.contains(point.first)
 
 fun <T> List<List<T>>.wrapAround(point: Coords): Coords =
     wrapAround(point.first, this.first().indices) to wrapAround(point.second, this.indices)
@@ -71,6 +75,9 @@ fun sqrRoots(a: Int, b: Int, c: Int): List<Double> {
 fun sqr(i: Int): Long = i.toLong() * i
 
 typealias Coords = Pair<Int, Int>
+operator fun Coords.plus(other: Coords): Coords = (first + other.first) to (second + other.second)
+operator fun Coords.minus(other: Coords): Coords = (first - other.first) to (second - other.second)
+
 data class Coords3(val x: Int, val y: Int, val z: Int) {
     constructor(l: List<Int>): this(l[0], l[1], l[2])
     operator fun plus(other: Coords3) = Coords3(x + other.x, y + other.y, z + other.z)
