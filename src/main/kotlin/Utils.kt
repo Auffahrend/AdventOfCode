@@ -47,6 +47,12 @@ operator fun <T> List<MutableList<T>>.set(point: Coords, newValue: T){
     this[point.second][point.first] = newValue
 }
 
+fun <T> List<List<T>>.neighbours4(point: Coords): List<Coords> = point.let { (x, y) ->
+    listOf(-1, 0, 1).flatMap { dx -> listOf(-1, 0, 1).map { dy -> dx to dy } }
+        .filter { (dx, dy) -> (dx == 0 || dy == 0) && !(dx == 0 && dy == 0) }
+        .map { (dx, dy) -> (x + dx) to (y + dy) }
+        .filter { (x, y) -> y in this.indices && x in this.first().indices }
+}
 fun <T> List<List<T>>.neighbours8(point: Coords): List<Coords> = point.let { (x, y) ->
     listOf(-1, 0, 1).flatMap { dx -> listOf(-1, 0, 1).map { dy -> dx to dy } }
         .filter { (dx, dy) -> dx != 0 || dy != 0 }
