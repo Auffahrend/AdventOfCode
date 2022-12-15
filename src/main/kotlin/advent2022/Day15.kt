@@ -35,10 +35,7 @@ class Day15(testInput: String) {
     }
 
     fun solve1(y: Int): Int {
-        val allCoveredRanges = sensorReadings.map { it.coverageAt(y) }.filterNot { it.isEmpty() }
-            .sortedBy { it.first }
-            .toMutableList()
-            .unionIntersections()
+        val allCoveredRanges = coverageFromAllSensorsAt(y)
 
         val allItemsOnRow = sensorReadings.flatMap { setOf(it.sensor, it.beacon) }.toSet().filter { it.second == y }
         return allCoveredRanges.sumOf(IntRange::size) - allItemsOnRow.size
@@ -46,10 +43,7 @@ class Day15(testInput: String) {
 
     fun solve2(range: IntRange): Long {
         range.forEach { y ->
-            val allCoveredRanges = sensorReadings.map { it.coverageAt(y) }.filterNot { it.isEmpty() }
-                .sortedBy { it.first }
-                .toMutableList()
-                .unionIntersections()
+            val allCoveredRanges = coverageFromAllSensorsAt(y)
                 .mapNotNull { it.intersection(range) }
             if (range.size() - allCoveredRanges.sumOf(IntRange::size) == 1) {
                 assert(allCoveredRanges.size == 2) { "A point in the middle is expected (although it's possible it's on an edge" }
@@ -59,6 +53,12 @@ class Day15(testInput: String) {
         }
         throw IllegalArgumentException("A single possible point not found")
     }
+
+    private fun coverageFromAllSensorsAt(y: Int) = sensorReadings.map { it.coverageAt(y) }
+        .filterNot { it.isEmpty() }
+        .sortedBy { it.first }
+        .toMutableList()
+        .unionIntersections()
 }
 
 private fun IntRange.size(): Int = if (isEmpty()) 0 else last - first + 1
