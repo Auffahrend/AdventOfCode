@@ -29,6 +29,12 @@ tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = jvmVersion
 }
 
+tasks.withType<Test> {
+//    minHeapSize = "512m"
+    maxHeapSize = "8g"
+//    jvmArgs = listOf("-XX:MaxPermSize=512m")
+}
+
 application {
     mainClass.set("MainKt")
 }
