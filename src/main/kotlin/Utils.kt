@@ -83,11 +83,21 @@ fun sqr(i: Int): Long = i.toLong() * i
 typealias Coords = Pair<Int, Int>
 operator fun Coords.plus(other: Coords): Coords = (first + other.first) to (second + other.second)
 operator fun Coords.minus(other: Coords): Coords = (first - other.first) to (second - other.second)
+fun Coords.rotate90(): Coords = (-second to first)
 
 data class Coords3(val x: Int, val y: Int, val z: Int) {
     constructor(l: List<Int>): this(l[0], l[1], l[2])
     operator fun plus(other: Coords3) = Coords3(x + other.x, y + other.y, z + other.z)
     operator fun minus(other: Coords3) = Coords3(x - other.x, y - other.y, z - other.z)
+
+    fun neighbours6() = listOf(
+        Coords3(x + 1, y, z),
+        Coords3(x - 1, y, z),
+        Coords3(x , y + 1, z),
+        Coords3(x , y - 1, z),
+        Coords3(x , y , z + 1),
+        Coords3(x , y , z - 1),
+    )
 }
 
 
