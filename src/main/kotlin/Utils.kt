@@ -28,7 +28,7 @@ fun <T> List<List<T>>.neighbours4(point: Coords, wrapAround: Boolean = false): L
 }
 
 fun <T> List<List<T>>.contains(point: Coords): Boolean =
-    this.indices.contains(point.second) && this[0].indices.contains(point.first)
+    this.indices.contains(point.second) && this[point.second].indices.contains(point.first)
 
 fun <T> List<List<T>>.wrapAround(point: Coords): Coords =
     wrapAround(point.first, this.first().indices) to wrapAround(point.second, this.indices)
