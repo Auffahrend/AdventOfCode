@@ -11,17 +11,17 @@ class DayXXTest : BaseTest() {
     private val taskInput by lazy { readResourceFile("/advent2022/dayXX.txt") }
 
     @Test
-    fun `test part1`() = measure {
+    fun `1 test part1`() = measure {
         verifyResult(0, factory(testInput).solve())
     }
 
     @Test
-    fun solve() = measure {
+    fun `3 solve`() = measure {
         println("Result is ${factory(taskInput).solve()}")
     }
 
     @Test
-    fun `test part2`() = measure {
+    fun `2 test part2`() = measure {
         verifyResult(0, factory(testInput).solve())
     }
 }

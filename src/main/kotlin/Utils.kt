@@ -19,13 +19,9 @@ fun measure(test: () -> Unit, i: Int) {
 
 typealias Matrix<T> = List<List<T>>
 fun <T> List<List<T>>.deepMutableCopy(): MutableList<MutableList<T>> = this.map { it.toMutableList() }.toMutableList()
-fun <T> List<List<T>>.neighbours4(point: Coords, wrapAround: Boolean = false): List<Coords> = point.let { (x, y) ->
-    listOf(-1, 0, 1).flatMap { dx -> listOf(-1, 0, 1).map { dy -> dx to dy } }
-        .filter { (dx, dy) -> (dx * dy == 0) && (dx != 0 || dy != 0) }
-        .map { (dx, dy) -> (x + dx) to (y + dy) }
+fun <T> List<List<T>>.neighbours4(point: Coords, wrapAround: Boolean = false): List<Coords> = point.neighbours4()
         .filter { (x, y) -> !wrapAround && y in this.indices && x in this.first().indices }
         .map { point -> if (wrapAround) this.wrapAround(point) else point }
-}
 
 fun <T> List<List<T>>.contains(point: Coords): Boolean =
     this.indices.contains(point.second) && this[point.second].indices.contains(point.first)
@@ -47,18 +43,15 @@ operator fun <T> List<MutableList<T>>.set(point: Coords, newValue: T){
     this[point.second][point.first] = newValue
 }
 
-fun <T> List<List<T>>.neighbours4(point: Coords): List<Coords> = point.let { (x, y) ->
-    listOf(-1, 0, 1).flatMap { dx -> listOf(-1, 0, 1).map { dy -> dx to dy } }
-        .filter { (dx, dy) -> (dx == 0 || dy == 0) && !(dx == 0 && dy == 0) }
-        .map { (dx, dy) -> (x + dx) to (y + dy) }
+fun <T> List<List<T>>.neighbours4(point: Coords): List<Coords> = point.neighbours4()
         .filter { (x, y) -> y in this.indices && x in this.first().indices }
-}
-fun <T> List<List<T>>.neighbours8(point: Coords): List<Coords> = point.let { (x, y) ->
-    listOf(-1, 0, 1).flatMap { dx -> listOf(-1, 0, 1).map { dy -> dx to dy } }
-        .filter { (dx, dy) -> dx != 0 || dy != 0 }
-        .map { (dx, dy) -> (x + dx) to (y + dy) }
+
+fun Coords.neighbours4(): List<Coords> = let { (x, y) ->
+    listOf(x - 1 to y, x + 1 to y, x to y - 1, x to y + 1) }
+
+
+fun <T> List<List<T>>.neighbours8(point: Coords): List<Coords> = point.neighbours8()
         .filter { (x, y) -> y in this.indices && x in this.first().indices }
-}
 
 fun Collection<Coords>.neighbours8(point: Coords): List<Coords> = point.neighbours8()
 
