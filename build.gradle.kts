@@ -18,7 +18,7 @@ repositories {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
     testImplementation(kotlin("test"))
-    implementation(kotlin("stdlib-jdk8"))
+//    implementation(kotlin("stdlib-jdk11"))
 }
 
 tasks.test {
