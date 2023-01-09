@@ -19,7 +19,7 @@ class Day17Test : BaseTest() {
 
     @Test
     fun solve() = measure {
-        println("Result is ${factory(taskInput).solve(1767)}")
+        println("Result is ${factory(taskInput).solve(4000)}")
     }
 
     @Test

@@ -84,7 +84,7 @@ class Day17(testInput: String) {
         val lowestLevel = allPointsOffsets.minOf { it.first }
     }
 
-    private data class FallSignature(val shape: Shape, val offset: Int, val stream: Int)
+    private data class FallSignature(val shape: Shape, val offset: Int, val stream: Int, val heightIncrease: Int)
     private data class Repetition(
         val heightBefore: Int,
         val rocksBefore: Int,
@@ -115,20 +115,36 @@ class Day17(testInput: String) {
 
     fun solve(rocks: Long): Long {
         var streamI = 0
+        var previousHeight = 0
+        val repetitionLookupSize = 20
         var repetition: Repetition? = null
         val fallSignatureHistory: MutableList<Pair<FallSignature, Int>> = mutableListOf()
 
-        while (repetition == null) {
+
+        while (cave.allRocks.size < rocks) {
+            previousHeight = cave.highestPoint
             val rock = cave.spawn()
             cave.increase(rock.basePosition.first)
             while (!rock.felt) {
                 cave.tryMove(rock, streamAt(streamI++))
                 cave.tryFall(rock)
             }
-            val signature = FallSignature(rock.shape, rock.basePosition.second, streamI % airStreams.length)
-            fallSignatureHistory.add(signature to cave.highestPoint)
-            val index = fallSignatureHistory.indexOfFirst { it.first == signature }
-            if (index >= 0 && index < fallSignatureHistory.lastIndex && repetition == null) {
+            fallSignatureHistory.add(
+                FallSignature(
+                    rock.shape,
+                    rock.basePosition.second,
+                    streamI % airStreams.length,
+                    cave.highestPoint - previousHeight
+                ) to
+                        cave.highestPoint
+            )
+
+            if (fallSignatureHistory.size < repetitionLookupSize * 2) continue
+            val lastSignatures = fallSignatureHistory.subList(fallSignatureHistory.size - repetitionLookupSize, fallSignatureHistory.size)
+
+            val index = fallSignatureHistory.findFirst(lastSignatures, 0 until fallSignatureHistory.size - 1 - repetitionLookupSize)
+
+            if (index >= 0 && repetition == null) {
                 val heightBefore = if (index > 0) fallSignatureHistory[index - 1].second else 0
                 val heightIncreases = fallSignatureHistory.subList(index, fallSignatureHistory.lastIndex)
                     .map { it.second - heightBefore }
@@ -138,10 +154,19 @@ class Day17(testInput: String) {
             }
 //            cave.debug()
         }
-
-        println("Repetition found after ${cave.allRocks.size} rocks: $repetition")
-
-
-        return repetition.calculateTotalHeight(rocks)
+        return if (repetition != null) {
+            println("Repetition found after ${cave.allRocks.size} rocks: $repetition")
+            repetition.calculateTotalHeight(rocks)
+        } else {
+            cave.highestPoint.toLong()
+        }
     }
+}
+
+private fun <E> List<E>.findFirst(sublist: MutableList<E>, inIndices: IntRange = indices): Int {
+    (inIndices.first..inIndices.last - sublist.size).forEach { offset ->
+        if (sublist.mapIndexed { i, e -> this[offset + i] == e }.all { it }) return offset
+
+    }
+    return -1
 }

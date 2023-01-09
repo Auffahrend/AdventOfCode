@@ -1,3 +1,7 @@
+import java.nio.file.Files
+import java.nio.file.OpenOption
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import kotlin.math.sqrt
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -95,6 +99,11 @@ data class Coords3(val x: Int, val y: Int, val z: Int) {
     )
 }
 
-
+fun <T> Class<T>.log(message: String) {
+    println(message)
+    val path = Paths.get("logs/${this.name}")
+    Files.createDirectories(path.parent)
+    Files.write(path, listOf(message), StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+}
 
 private class Utils
