@@ -32,17 +32,13 @@ sourceSets["test"].withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourc
     kotlin.srcDir("test/test/kotlin")
 }
 
-
-tasks.test {
-    useJUnitPlatform()
-}
-
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = jvmVersion
 }
 
 tasks.withType<Test> {
 //    minHeapSize = "512m"
+    useJUnitPlatform()
     maxHeapSize = "8g"
 //    jvmArgs = listOf("-XX:MaxPermSize=512m")
 }
