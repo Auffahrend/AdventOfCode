@@ -21,6 +21,14 @@ dependencies {
 //    implementation(kotlin("stdlib-jdk11"))
 }
 
+sourceSets["main"].withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
+    kotlin.srcDir("src/main/kotlin")
+}
+sourceSets["test"].withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
+    kotlin.srcDir("test/test/kotlin")
+}
+
+
 tasks.test {
     useJUnitPlatform()
 }
