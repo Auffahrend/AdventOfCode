@@ -28,7 +28,7 @@ fun main() {
 
 private fun parse(input: String) : List<PasswordCheck> = input.lines().filter { it.isNotBlank()}
     .map { it.split(":") }
-    .map { (rule, password) -> PasswordCheck(PasswordRule(rule.strip()), password.strip()) }
+    .map { (rule, password) -> PasswordCheck(PasswordRule(rule), password) }
 
 private class PasswordCheck(val rule: PasswordRule, val password: String) {
     fun isValid(interpretation: Int): Boolean = rule.covers(password, interpretation)

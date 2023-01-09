@@ -124,19 +124,25 @@ class Day19(testInput: String) {
     }
 
     fun solve(time: Int = 24, size: Int = 0): Long {
-        val results = blueprints.take( if (size == 0) blueprints.size else size)
-            .parallelStream()
+        val results = blueprints.take(if (size == 0) blueprints.size else size)
+//            .parallelStream()
             .map {
-            javaClass.log("Considering Blueprint ${it.id}...")
-            val started = Instant.now()
-            val initialState = State(time, it, Resources(), Resources(ore = 1), AtomicInteger(0))
-            val bestResult = dfsForMaxGeodes(initialState)
-                .also { res -> javaClass.log("Best result for blueprint ${it.id} is $res geodes. Evaluated in ${Duration.between(started, Instant.now())}") }
-            it.id to bestResult.toLong()
-        }.toList()
-            .also {
-//            javaClass.log("Cache efficiency is ${cacheHits.get() * 100 / (cacheMisses.get() + cacheHits.get())}% (${cacheHits.get()} hits and ${cacheMisses.get()} misses)")
-        }
+                javaClass.log("Considering Blueprint ${it.id}...")
+                val started = Instant.now()
+                val initialState = State(time, it, Resources(), Resources(ore = 1), AtomicInteger(0))
+                val bestResult = dfsForMaxGeodes(initialState)
+                    .also { res ->
+                        javaClass.log(
+                            "Best result for blueprint ${it.id} is $res geodes. Evaluated in ${
+                                Duration.between(
+                                    started,
+                                    Instant.now()
+                                )
+                            }"
+                        )
+                    }
+                it.id to bestResult.toLong()
+            }
 
         return if (size == 0) results.fold(0L) { l, r -> l + r.first * r.second}
             else results.fold(1L) { l, r -> l * r.second}
