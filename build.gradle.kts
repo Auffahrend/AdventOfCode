@@ -19,8 +19,8 @@ repositories {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
     testImplementation(kotlin("test"))
-    testImplementation(kotlin("org.junit.jupiter:junit-jupiter-api:$junitVersion'"))
-    testRuntimeOnly(kotlin("org.junit.jupiter:junit-jupiter-engine:$junitVersion"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion'")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
 
 //    implementation(kotlin("stdlib-jdk11"))
 }
