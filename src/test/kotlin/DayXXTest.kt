@@ -8,7 +8,7 @@ import readResourceFile
 class DayXXTest : BaseTest() {
     private val factory = { input: String -> DayXX(input) }
     private val testInput = ""
-    private val taskInput by lazy { readResourceFile("/advent2022/dayXX.txt") }
+    private val taskInput by lazy { readResourceFile("/advent2023/dayXX.txt") }
 
     @Test
     fun `1 test part1`() = measure {
