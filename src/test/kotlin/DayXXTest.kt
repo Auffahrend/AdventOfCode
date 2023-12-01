@@ -2,9 +2,12 @@ import BaseTest
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.MethodOrderer
+import org.junit.jupiter.api.TestMethodOrder
 import readResourceFile
 
 
+@TestMethodOrder(MethodOrderer.Alphanumeric::class)
 class DayXXTest : BaseTest() {
     private val factory = { input: String -> DayXX(input) }
     private val testInput = ""
