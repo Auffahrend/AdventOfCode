@@ -1,6 +1,6 @@
 use regex::Regex;
 
-use crate::advent2023::utils::{test_and_run, TestVals};
+use crate::utils::{test_and_run, TestVals};
 
 pub(crate) fn solve() {
     test_and_run(&solution, &TEST_1, &TEST_2, FILE)

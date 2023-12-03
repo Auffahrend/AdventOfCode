@@ -1,2 +1,2 @@
 pub mod day02;
-mod utils;
+pub mod day03;
