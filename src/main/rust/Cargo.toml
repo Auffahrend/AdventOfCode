@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 regex = { version = "1.10", features = [] }
 lazy_static = { version = "1", features = [] }
+rayon = { version = "1", features = [] }

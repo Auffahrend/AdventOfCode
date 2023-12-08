@@ -1,6 +1,7 @@
 use std::ops::Range;
 use lazy_static::lazy_static;
 use regex::Regex;
+use rayon::prelude::*;
 
 use crate::utils::{test_and_run, TestVals};
 
@@ -40,13 +41,10 @@ fn solution(input: &String) -> i64 {
     //     .min().unwrap()
 
     // part 2
-    seedRanges.iter()
-        .map(|sr| sr.map(|seed| {
+    seedRanges.par_iter()
+        .map(|sr| sr.clone().map(|seed| {
             let dest = mappings.iter()
                 .fold(seed, |source, mapping| mapping.map(source));
-            if mappings.len() < 10 {
-                println!("Seed {} maps to location {}", seed, dest);
-            }
             dest
         }
         )
