@@ -16,18 +16,42 @@ fn solution(input: &String) -> i64 {
             n.parse::<i64>().unwrap()
         })
         .collect();
+    let seedRanges: Vec<Range<i64>> = SEED_RANGE_RE.captures_iter(parts[0])
+        .map(|c| {
+            let (_, [ss, sl]) = c.extract();
+            let range_start = ss.parse::<i64>().unwrap();
+            let range_length = sl.parse::<i64>().unwrap();
+            range_start..(range_start + range_length)
+        })
+        .collect();
 
     let mappings: Vec<Mapping> = parts.iter().skip(1)
         .map(|p| Mapping::parse(p))
         .collect();
 
-    seeds.iter()
-        .map(|&seed| {
+    // part 1
+    // seeds.iter()
+    //     .map(|&seed| {
+    //         let dest = mappings.iter()
+    //             .fold(seed, |source, mapping| mapping.map(source));
+    //         println!("Seed {} maps to location {}", seed, dest);
+    //         dest
+    //     })
+    //     .min().unwrap()
+
+    // part 2
+    seedRanges.iter()
+        .map(|sr| sr.map(|seed| {
             let dest = mappings.iter()
                 .fold(seed, |source, mapping| mapping.map(source));
-            println!("Seed {} maps to location {}", seed, dest);
+            if mappings.len() < 10 {
+                println!("Seed {} maps to location {}", seed, dest);
+            }
             dest
-        })
+        }
+        )
+            .min().unwrap()
+        )
         .min().unwrap()
 }
 
@@ -43,6 +67,7 @@ struct Mapping {
 
 lazy_static! {
     static ref NUMBER_RE : Regex = Regex::new(r"(\d+)").unwrap();
+    static ref SEED_RANGE_RE : Regex = Regex::new(r"(\d+) (\d+)").unwrap();
     static ref RANGE_RE : Regex = Regex::new(r"(\d+) (\d+) (\d+)").unwrap();
 }
 impl Mapping {
@@ -56,6 +81,30 @@ impl Mapping {
             source
         }
     }
+
+    // fn map_range(&self, sourceRange: Range<i64>) -> Vec<Range<i64>> {
+    //     let mut curRange = sourceRange.clone();
+    //     let mut result: Vec<Range<i64>> = Vec::new();
+    //
+    //     let mut i = 0usize;
+    //     while !curRange.is_empty() && i < self.ranges.len() {
+    //         let rangeStart =
+    //     }
+    //
+    //     if !curRange.is_empty() {
+    //         result.push();
+    //     }
+    //     return result;
+    //     let self.ranges.iter()
+    //         .find(|&r| r.source.contains(&source));
+    //     if let Some(mappingRange) = range {
+    //         let offset = source - mappingRange.source.start;
+    //         mappingRange.dest.start + offset
+    //     } else {
+    //         source
+    //     }
+    // }
+
     fn parse(input: &str) -> Mapping {
         let lines: Vec<&str> = input.lines().collect();
         let ranges: Vec<MappingRange> = lines.iter().skip(1)
