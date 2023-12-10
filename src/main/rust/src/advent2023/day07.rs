@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
+use lazy_static::lazy_static;
 
 use crate::utils::{test_and_run, TestVals};
 
@@ -19,12 +20,17 @@ fn solution(input: &String) -> i64 {
     let mut winnings = 0i64;
     for rank in 0..hands.len() {
         let win = hands[rank].bid * (1i64 + rank as i64);
-        // println!("Hand {:?} winning is {}", hands[rank], win);
+        println!("Hand {:?} winning is {}", hands[rank], win);
         winnings += win
     }
 
     winnings
 }
+
+const JOKER: u8 = 11;
+lazy_static!(
+    static ref MODE: u8 = 2;
+);
 
 #[derive(Debug, PartialOrd, PartialEq, Eq)]
 enum HandType {
@@ -86,7 +92,7 @@ impl Hand {
             '8' => 8,
             '9' => 9,
             'T' => 10,
-            'J' => 11,
+            'J' => JOKER.clone(),
             'Q' => 12,
             'K' => 13,
             'A' => 14,
@@ -101,14 +107,23 @@ impl Hand {
         if self.hand_type == None {
             let mut groups: HashMap<u8, u8> = HashMap::new();
 
+            let mut jockers = 0;
             for card in self.cards {
-                let count = groups.entry(card).or_insert(0);
-                *count += 1;
+                if JOKER == card && *MODE == 2 {
+                    jockers += 1;
+                } else {
+                    let count = groups.entry(card).or_insert(0);
+                    *count += 1;
+                }
             }
 
             let mut counts = groups.clone().values().map(|&e| e).collect::<Vec<u8>>();
             counts.sort();
             counts.reverse();
+            if counts.is_empty() && jockers == 5 {
+                counts.push(0);
+            }
+            counts[0] += jockers;
             self.hand_type = match counts.as_slice() {
                 [5] => Some(HandType::Five),
                 [4, 1] => Some(HandType::Four),
@@ -124,19 +139,33 @@ impl Hand {
             }
         }
     }
+
+    fn card_cmp(card: &u8, other: &u8) -> Ordering {
+        if *MODE == 2 {
+            match (*card, *other) {
+                (JOKER, JOKER) => Ordering::Equal,
+                (JOKER, _) => Ordering::Less,
+                (_, JOKER) => Ordering::Greater,
+                (_, _) => card.cmp(other),
+            }
+        } else {
+            card.cmp(other)
+        }
+    }
 }
 
 impl Ord for Hand {
     fn cmp(&self, other: &Self) -> Ordering {
         let res = self.hand_type.cmp(&other.hand_type)
-            .then(self.cards[0].cmp(&other.cards[0]))
-            .then(self.cards[1].cmp(&other.cards[1]))
-            .then(self.cards[2].cmp(&other.cards[2]))
-            .then(self.cards[3].cmp(&other.cards[3]))
-            .then(self.cards[4].cmp(&other.cards[4]));
+            .then(Hand::card_cmp(&self.cards[0], &other.cards[0]))
+            .then(Hand::card_cmp(&self.cards[1], &other.cards[1]))
+            .then(Hand::card_cmp(&self.cards[2], &other.cards[2]))
+            .then(Hand::card_cmp(&self.cards[3], &other.cards[3]))
+            .then(Hand::card_cmp(&self.cards[4], &other.cards[4]));
         // println!("Comparing {:?} and {:?}. Result is {:?}", self, &other, res);
         res
     }
+
 }
 
 
