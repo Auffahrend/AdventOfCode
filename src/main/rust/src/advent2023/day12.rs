@@ -1,6 +1,4 @@
-use std::io::Read;
-use rayon::iter::IntoParallelRefIterator;
-use regex::Regex;
+use rayon::prelude::*;
 
 use crate::utils::{test_and_run, TestVals};
 
