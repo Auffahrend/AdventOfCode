@@ -1,4 +1,5 @@
 use std::io::Read;
+use rayon::iter::IntoParallelRefIterator;
 use regex::Regex;
 
 use crate::utils::{test_and_run, TestVals};
@@ -13,7 +14,7 @@ fn solution(input: &String) -> i64 {
         // .inspect(|r| println!("Parsed {:?}", r))
         .collect();
 
-    records.iter()
+    records.par_iter()
         .map(Record::possible_solutions)
         .inspect(|r| println!("Solutions {:?}", r))
         .sum()
