@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use rayon::prelude::*;
 
 use crate::utils::{test_and_run, TestVals};
@@ -74,7 +75,9 @@ impl Record {
         if !self.is_possible() { return 0; } else {
             if let Some(i) = self.first_unknown {
                 let (first, second) = self.mutations_at(i);
-                first.possible_solutions() + second.possible_solutions()
+                [first, second].par_iter()
+                    .map(|r| r.possible_solutions())
+                    .sum()
             } else { 1 }
         }
     }
