@@ -1,4 +1,5 @@
 use regex::Regex;
+use crate::parse_as_chars;
 
 use crate::utils::{test_and_run, TestVals};
 

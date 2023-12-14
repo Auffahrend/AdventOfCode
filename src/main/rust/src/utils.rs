@@ -4,6 +4,15 @@ use std::io;
 use std::io::Read;
 use std::time::Instant;
 
+#[macro_export]
+macro_rules! parse_as_chars {
+    ($input:expr) => {
+        $input.lines()
+              .map(|line| line.chars().collect::<Vec<char>>())
+              .collect::<Vec<Vec<char>>>()
+    };
+}
+
 pub struct TestVals<I, O>(pub I, pub O)
     where O: Ord + Display
 ;
