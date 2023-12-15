@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 use rayon::prelude::*;
+use cached::proc_macro::cached;
 
 use crate::utils::{test_and_run, TestVals};
 
@@ -10,87 +11,130 @@ pub(crate) fn solve() {
 fn solution(input: &String) -> i64 {
     let records: Vec<Record> = input.lines()
         .map(Record::parse)
-        // .inspect(|r| println!("Parsed {:?}", r))
         .collect();
 
-    records.par_iter()
-        .map(Record::possible_solutions)
-        .inspect(|r| println!("Solutions {:?}", r))
+    records.iter().enumerate()
+        .map(|(i, &ref r)| {
+            let res = possible_solutions(r.clone());
+            println!("Line #{} yielded solutions {:?}", i, res);
+            res
+        })
         .sum()
 }
+
 
 const OK: u8 = 1;
 const BROKEN: u8 = 2;
 const UNKNOWN: u8 = 0;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq)]
 struct Record {
     map: Vec<u8>,
     broken_groups: Vec<u8>,
-    should_be_broken_total: u8,
-    first_unknown: Option<usize>,
-
 }
+
+#[cached]
+fn possible_solutions(record: Record) -> i64 {
+    if let Some(i) = record.first_unknown_i() {
+        let options = record.mutations_at(i);
+        options.par_iter()
+            .filter(|&r| r.is_possible())
+            .map(|r| possible_solutions(r.simplify()))
+            .sum()
+    } else { 1 }
+}
+
 
 impl Record {
     fn new(map: Vec<u8>, broken_groups: Vec<u8>) -> Self {
-        let should_be_broken_total: u8 = broken_groups.iter().sum();
-        let mut first_unknown: Option<usize> = None;
-        for i in 0..map.len() {
-            if map[i] == UNKNOWN {
-                first_unknown = Some(i);
-                break;
-            }
-        };
-
-        Record { map, broken_groups, should_be_broken_total, first_unknown }
+        Record { map, broken_groups }
     }
+
+    fn simplify(&self) -> Self {
+        if self.map.contains(&UNKNOWN) {
+            let mut simplified_map = self.map.clone();
+            let mut simplified_groups = self.broken_groups.clone();
+            // removing from left
+            let first_unknown_i = simplified_map.iter().position(|&c| c == UNKNOWN).unwrap();
+            if let Some(last_ok_i) = simplified_map[0..first_unknown_i].iter().rposition(|&c| c == OK) {
+                let groups_to_remove = Record::count_broken_groups(&simplified_map[0..last_ok_i]);
+                if !simplified_groups.starts_with(groups_to_remove.as_slice()) {
+                    println!("While trying to simplify {:?}, first groups to remove were {:?}, but actual groups don't start with it!",
+                             self, groups_to_remove);
+                    panic!();
+                } else {
+                    for _ in 0..groups_to_remove.len() { simplified_groups.remove(0); }
+                    for _ in 0..last_ok_i+1 { simplified_map.remove(0); }
+                }
+            }
+
+            // removing from right
+            let last_unknown_i = simplified_map.iter().rposition(|&c| c == UNKNOWN).unwrap();
+            if let Some(first_ok_i) = simplified_map[last_unknown_i..].iter().position(|&c| c == OK) {
+                let groups_to_remove = Record::count_broken_groups(&simplified_map[last_unknown_i+first_ok_i..]);
+                if !simplified_groups.ends_with(groups_to_remove.as_slice()) {
+                    println!("While trying to simplify {:?}, last groups to remove were {:?}, but actual groups don't end with it!",
+                             self, groups_to_remove);
+                    panic!();
+                } else {
+                    for _ in 0..groups_to_remove.len() { simplified_groups.remove(simplified_groups.len()-1); }
+                    for _ in (last_unknown_i+first_ok_i)..simplified_map.len() { simplified_map.remove(simplified_map.len() - 1); }
+                }
+            }
+            Record { map: simplified_map, broken_groups: simplified_groups }
+        } else {
+            //  if no unknowns, trivial simplification
+            Record { map: vec![OK], broken_groups: vec![] }
+        }
+    }
+
+
     fn is_possible(&self) -> bool {
         // total broken optimizing
         let total_broken = self.map.iter().filter(|&e| e == &BROKEN).count() as u8;
-        if total_broken > self.should_be_broken_total { return false; }
+        if total_broken > self.broken_groups.iter().sum() { return false; }
 
 
-        if let Some(i) = self.first_unknown {
+        if let Some(i) = self.first_unknown_i() {
             // non-matching start of broken groups optimizing
-            let sub_map: Vec<u8> = self.map.iter().take(i).map(|e| e.clone()).collect();
-            let starting_groups = Record::count_broken_groups(&sub_map);
-            if !starting_groups.is_empty() {
-                self.groups_can_start_with(&starting_groups)
+            if let Some(last_ok_i) = self.map[0..i].iter().rposition(|&c| c == OK) {
+                let starting_groups = Record::count_broken_groups(&self.map[0..last_ok_i]);
+                if !starting_groups.is_empty() {
+                    self.broken_groups.starts_with(starting_groups.as_slice())
+                } else { true }
             } else { true }
         } else {
+            // no unknowns
             let counted_broken_groups: Vec<u8> = Record::count_broken_groups(&self.map);
             counted_broken_groups == self.broken_groups
         }
     }
 
-    fn count_broken_groups(map: &Vec<u8>) -> Vec<u8> {
-        map.split(|&e| e == OK)
+    fn first_unknown_i(&self) -> Option<usize> {
+        self.map.iter().position(|&c| c == UNKNOWN)
+    }
+
+    fn count_broken_groups(map: &[u8]) -> Vec<u8> {
+        map
+            .split(|&e| e == OK)
+            .inspect(|&group| if group.contains(&UNKNOWN) {
+                println!("Trying to count broken groups with unknowns in {:?}!", map);
+                panic!()
+            })
             .map(|group| group.len() as u8)
             .filter(|&it| it != 0)
             .collect()
     }
 
-    fn possible_solutions(&self) -> i64 {
-        if !self.is_possible() { return 0; } else {
-            if let Some(i) = self.first_unknown {
-                let (first, second) = self.mutations_at(i);
-                [first, second].par_iter()
-                    .map(|r| r.possible_solutions())
-                    .sum()
-            } else { 1 }
-        }
-    }
-
-    fn mutations_at(&self, index: usize) -> (Record, Record) {
+    fn mutations_at(&self, index: usize) -> Vec<Record> {
         let mut first = self.map.clone();
         first[index] = BROKEN;
         let mut second = self.map.clone();
         second[index] = OK;
-        (
+        vec![
             Record::new(first, self.broken_groups.clone()),
             Record::new(second, self.broken_groups.clone())
-        )
+        ]
     }
 
     fn parse(line: &str) -> Record {
@@ -120,13 +164,6 @@ impl Record {
 
         Record::new(map, broken_groups)
     }
-    fn groups_can_start_with(&self, groups: &Vec<u8>) -> bool {
-        for i in 0..(groups.len() - 1) {
-            if self.broken_groups[i] != groups[i] { return false }
-        }
-        // last group can be less or equal, because it might grow in the future (while resolving next unknowns)
-        self.broken_groups[groups.len() - 1] >= groups[groups.len() - 1]
-    }
 }
 
 const TEST_1: TestVals<&str, i64> = TestVals(&"\
@@ -136,6 +173,6 @@ const TEST_1: TestVals<&str, i64> = TestVals(&"\
 ????.#...#... 4,1,1
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1
-", 525152i64);
-const TEST_2: TestVals<&str, i64> = TestVals(&"", 0i64);
+", 21i64);
+const TEST_2: TestVals<&str, i64> = TestVals(&TEST_1.0, 525152i64);
 const FILE: &str = "../resources/advent2023/day12.txt";

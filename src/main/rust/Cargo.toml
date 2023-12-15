@@ -11,3 +11,4 @@ lazy_static = { version = "1", features = [] }
 rayon = { version = "1", features = [] }
 num-integer = { version = "0.1", features = [] }
 dashmap = { version = "5.5", features = [] }
+cached = { version = "0.46" }
