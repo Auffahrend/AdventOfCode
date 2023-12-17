@@ -1,7 +1,14 @@
+use std::ops::Add;
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub(crate) struct Coord2 {
     pub(crate) x: isize,
     pub(crate) y: isize,
+}
+
+impl Add for Coord2 {
+    type Output = Coord2;
+    fn add(self, other: Coord2) -> Coord2 { Coord2 { x: self.x + other.x, y: self.y + other.y } }
 }
 
 // pub(crate) type Grid2<'a, T> = Vec<Vec<&'a T>>;
