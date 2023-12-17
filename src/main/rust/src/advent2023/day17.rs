@@ -1,11 +1,10 @@
 use std::cmp::{min, Ordering};
-use std::collections::{BinaryHeap, BTreeMap, HashMap, LinkedList};
-use dashmap::DashMap;
-use rayon::prelude::IntoParallelIterator;
-use regex::Regex;
-use crate::{coord2, coord2_valid_on, parse_as_chars, parse_as_digits, value_at_coord2};
-use crate::multi_dimensional::Coord2;
+use std::collections::BinaryHeap;
 
+use dashmap::DashMap;
+
+use crate::{coord2, coord2_valid_on, parse_as_digits, value_at_coord2};
+use crate::multi_dimensional::Coord2;
 use crate::utils::{test_and_run, TestVals};
 
 pub(crate) fn solve() {
@@ -71,33 +70,7 @@ fn find_best_path(weights: Vec<Vec<i64>>) -> i64 {
                     coord2!(1, 0),
                 ].into_iter()
                     .filter(|&dir| coord2_valid_on!(path.end.position + dir, &weights))
-                    // part 1
-                    // can't go 3+ tiles in the same direction
-                    // .filter(|&dir|
-                    //             path.end.last_10_dirs.len() < 3 || path.end.last_10_dirs.iter().any(|&d| d != dir)
-                    // )
-
-                    // part 2
-                    // can't go 10+ tiles in the same direction, but also can't turn before 4 tiles
-                    .filter(|&dir|
-                        path.end.last_10_dirs.len() < 10 || path.end.last_10_dirs.iter().any(|&d| d != dir)
-                    )
-                    .filter(|&dir|
-                        path.end.last_10_dirs.get(0)
-                            .map(|&prev_dir| {
-                                if path.end.last_10_dirs.len() < 4 {
-                                    // traveled less than 4 tiles - can only continue straight
-                                    dir == prev_dir
-                                } else {
-                                    // can turn if moved 4 tiles in the same direction
-                                    path.end.last_10_dirs[..4].iter().all(|&pd| pd == prev_dir) ||
-                                        // or continue straight
-                                        dir == prev_dir
-
-                                }
-                            })
-                            .unwrap_or(true)
-                    )
+                    .filter(|&dir| can_go_this_direction(&path.end, dir))
                     .filter(|&dir|
                         // can't reverse
                         path.end.last_10_dirs.get(0)
@@ -122,6 +95,29 @@ fn find_best_path(weights: Vec<Vec<i64>>) -> i64 {
         }
     }
     current_best_loss
+}
+
+fn can_go_this_direction(path: &PathEnd, dir: Coord2) -> bool {
+    // part 1
+    // can't go 3+ tiles in the same direction
+    // .filter(|&dir|
+    //             path.end.last_10_dirs.len() < 3 || path.end.last_10_dirs.iter().any(|&d| d != dir)
+
+    // part 2
+    // can't go 10+ tiles in the same direction, but also can't turn before 4 tiles
+    (path.last_10_dirs.len() < 10 || path.last_10_dirs.iter().any(|&d| d != dir))
+        && path.last_10_dirs.get(0)
+        .map(|&prev_dir| {
+            if path.last_10_dirs.len() < 4 {
+                // traveled less than 4 tiles - can only continue straight
+                dir == prev_dir
+            } else {
+                // can turn if moved 4 tiles in the same direction
+                path.last_10_dirs[..4].iter().all(|&pd| pd == prev_dir) ||
+                    // or continue straight
+                    dir == prev_dir
+            }
+        }).unwrap_or(true)
 }
 
 const TEST_1: TestVals<&str, i64> = TestVals(&"\
