@@ -20,7 +20,7 @@ fn solution(input: &String) -> i64 {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct PathEnd {
     position: Coord2,
-    last_3_dirs: Vec<Coord2>,
+    last_10_dirs: Vec<Coord2>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -44,7 +44,7 @@ impl PartialOrd for PathEndEstimate {
 
 fn find_best_path(weights: Vec<Vec<i64>>) -> i64 {
     let finish = coord2!(weights[0].len() - 1, weights.len() - 1);
-    let start = PathEnd { position: coord2!(0, 0), last_3_dirs: vec![] };
+    let start = PathEnd { position: coord2!(0, 0), last_10_dirs: vec![] };
     let mut queue: BinaryHeap<PathEndEstimate> = BinaryHeap::new();
     queue.push(PathEndEstimate { end: start.clone(), estimate_loss: (finish.x + finish.y) as i64 });
 
@@ -56,7 +56,12 @@ fn find_best_path(weights: Vec<Vec<i64>>) -> i64 {
         let total_loss = *memo.get(&path.end).unwrap();
 
         if total_loss < current_best_loss {
-            if path.end.position == finish {
+            if path.end.position == finish &&
+                // part 2 - need at least 4 tiles to stop
+                path.end.last_10_dirs[..4].iter()
+                    .reduce(|f, s| if *f == *s { f } else { &coord2!(0, 0) })
+                    .filter(|&non_zero| *non_zero != coord2!(0, 0)).is_some()
+            {
                 current_best_loss = total_loss
             } else {
                 vec![
@@ -66,21 +71,46 @@ fn find_best_path(weights: Vec<Vec<i64>>) -> i64 {
                     coord2!(1, 0),
                 ].into_iter()
                     .filter(|&dir| coord2_valid_on!(path.end.position + dir, &weights))
+                    // part 1
+                    // can't go 3+ tiles in the same direction
+                    // .filter(|&dir|
+                    //             path.end.last_10_dirs.len() < 3 || path.end.last_10_dirs.iter().any(|&d| d != dir)
+                    // )
+
+                    // part 2
+                    // can't go 10+ tiles in the same direction, but also can't turn before 4 tiles
                     .filter(|&dir|
-                        // can't go 3+ tiles in the same direction
-                        path.end.last_3_dirs.len() < 3 || path.end.last_3_dirs.iter().any(|&d| d != dir)
+                        path.end.last_10_dirs.len() < 10 || path.end.last_10_dirs.iter().any(|&d| d != dir)
+                    )
+                    .filter(|&dir|
+                        path.end.last_10_dirs.get(0)
+                            .map(|&prev_dir| {
+                                if path.end.last_10_dirs.len() < 4 {
+                                    // traveled less than 4 tiles - can only continue straight
+                                    dir == prev_dir
+                                } else {
+                                    // can turn if moved 4 tiles in the same direction
+                                    path.end.last_10_dirs[..4].iter().all(|&pd| pd == prev_dir) ||
+                                        // or continue straight
+                                        dir == prev_dir
+
+                                }
+                            })
+                            .unwrap_or(true)
                     )
                     .filter(|&dir|
                         // can't reverse
-                        path.end.last_3_dirs.get(0).map(|&prev_dir| dir != -prev_dir).unwrap_or(true)
+                        path.end.last_10_dirs.get(0)
+                            .map(|&prev_dir| dir != -prev_dir)
+                            .unwrap_or(true)
                     )
                     .for_each(|dir| {
                         let new_position = path.end.position + dir;
                         let new_total_loss = total_loss + value_at_coord2!(new_position, &weights);
-                        let mut new_last_3_dirs = vec![dir.clone()];
-                        new_last_3_dirs.extend_from_slice(&path.end.last_3_dirs[..min(2, path.end.last_3_dirs.len())]);
-                        let new_path_end = PathEnd { position: new_position, last_3_dirs: new_last_3_dirs };
-
+                        let mut new_last_N_dirs = vec![dir.clone()];
+                        // part 2: 3 -> 10
+                        new_last_N_dirs.extend_from_slice(&path.end.last_10_dirs[..min(9, path.end.last_10_dirs.len())]);
+                        let new_path_end = PathEnd { position: new_position, last_10_dirs: new_last_N_dirs };
                         let mut previous_best_for_the_path_end = memo.entry(new_path_end.clone()).or_insert(i64::MAX);
                         if new_total_loss < *previous_best_for_the_path_end {
                             *previous_best_for_the_path_end = new_total_loss;
@@ -108,6 +138,12 @@ const TEST_1: TestVals<&str, i64> = TestVals(&"\
 1224686865563
 2546548887735
 4322674655533
-", 102i64);
-const TEST_2: TestVals<&str, i64> = TestVals(TEST_1.0, 0i64);
+", 94i64);
+const TEST_2: TestVals<&str, i64> = TestVals(&"\
+111111111111
+999999999991
+999999999991
+999999999991
+999999999991
+", 71i64);
 const FILE: &str = "../resources/advent2023/day17.txt";
