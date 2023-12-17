@@ -13,6 +13,15 @@ macro_rules! parse_as_chars {
     };
 }
 
+#[macro_export]
+macro_rules! parse_as_digits {
+    ($input:expr) => {
+        $input.lines()
+              .map(|line| line.chars().map(|c| c.to_string().parse::<i64>().unwrap()).collect::<Vec<i64>>())
+              .collect::<Vec<Vec<i64>>>()
+    };
+}
+
 pub struct TestVals<I, O>(pub I, pub O)
     where O: Ord + Display
 ;
