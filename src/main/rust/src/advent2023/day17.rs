@@ -1,5 +1,5 @@
 use std::cmp::min;
-use std::collections::LinkedList;
+use std::collections::{HashMap, LinkedList};
 use regex::Regex;
 use crate::{coord2, coord2_valid_on, parse_as_chars, parse_as_digits, value_at_coord2};
 use crate::multi_dimensional::Coord2;
@@ -17,22 +17,25 @@ fn solution(input: &String) -> i64 {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct PathEnd {
-    total_loss: i64,
     position: Coord2,
     last_3_dirs: Vec<Coord2>,
 }
 
 fn find_best_path(weights: Vec<Vec<i64>>) -> i64 {
     let finish = coord2!(weights[0].len() - 1, weights.len() - 1);
-    let mut paths: LinkedList<PathEnd> = vec![PathEnd { total_loss: 0, position: coord2!(0, 0), last_3_dirs: vec![] }]
+    let mut paths: LinkedList<PathEnd> = vec![PathEnd { position: coord2!(0, 0), last_3_dirs: vec![] }]
         .into_iter().collect();
     let mut current_best_loss = i64::MAX;
+    let mut memo: HashMap<PathEnd, i64> = HashMap::new();
+    memo.insert(PathEnd { position: coord2!(0, 0), last_3_dirs: vec![] }, 0);
+
     // DFS, pick from queue head
     while let Some(path) = paths.pop_front() {
-        if path.total_loss < current_best_loss  {
+        let total_loss = *memo.get(&path).unwrap();
 
+        if total_loss < current_best_loss {
             if path.position == finish {
-                current_best_loss = path.total_loss
+                current_best_loss = total_loss
             } else {
                 vec![
                     coord2!(0, -1),
@@ -49,14 +52,19 @@ fn find_best_path(weights: Vec<Vec<i64>>) -> i64 {
                         // can't reverse
                         path.last_3_dirs.get(0).map(|&prev_dir| dir != -prev_dir).unwrap_or(true)
                     )
-                    .map(|dir| {
-                        let position = path.position + dir;
-                        let total_loss = path.total_loss + value_at_coord2!(position, &weights);
-                        let mut last_3_dirs = vec![dir.clone()];
-                        last_3_dirs.extend_from_slice(&path.last_3_dirs[..min(2, path.last_3_dirs.len())]);
-                        PathEnd { total_loss, position, last_3_dirs }
-                    } )
-                    .for_each(|p| paths.push_front(p));
+                    .for_each(|dir| {
+                        let new_position = path.position + dir;
+                        let new_total_loss = total_loss + value_at_coord2!(new_position, &weights);
+                        let mut new_last_3_dirs = vec![dir.clone()];
+                        new_last_3_dirs.extend_from_slice(&path.last_3_dirs[..min(2, path.last_3_dirs.len())]);
+                        let new_path_end = PathEnd { position: new_position, last_3_dirs: new_last_3_dirs };
+
+                        let previous_best_for_the_path_end = memo.entry(new_path_end.clone()).or_insert(i64::MAX);
+                        if new_total_loss < *previous_best_for_the_path_end {
+                            *previous_best_for_the_path_end = new_total_loss;
+                            paths.push_front(new_path_end);
+                        }
+                    });
             }
         }
     }
