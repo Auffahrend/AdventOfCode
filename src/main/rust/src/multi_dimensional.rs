@@ -1,5 +1,5 @@
 use std::fmt::{Display, Formatter};
-use std::ops::{Add, Mul, Neg};
+use std::ops::{Add, Mul, Neg, Sub};
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub(crate) struct Coord2 {
@@ -34,6 +34,11 @@ impl Add for Coord2 {
 impl Neg for Coord2 {
     type Output = Coord2;
     fn neg(self) -> Self::Output { coord2!(-self.x, -self.y) }
+}
+
+impl Sub for Coord2 {
+    type Output = Coord2;
+    fn sub(self, rhs: Self) -> Self::Output { coord2!(self.x - rhs.x, self.y - rhs.y) }
 }
 
 impl Display for Coord2 {
