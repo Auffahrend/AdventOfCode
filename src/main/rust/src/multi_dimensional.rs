@@ -26,6 +26,13 @@ macro_rules! value_at_coord2 {
     };
 }
 
+#[macro_export]
+macro_rules! set_value_at_coord2 {
+    ($coord:expr, $grid: expr, $val: expr) => {
+        $grid[$coord.y as usize][$coord.x as usize] = $val
+    };
+}
+
 impl Add for Coord2 {
     type Output = Coord2;
     fn add(self, other: Coord2) -> Self::Output { coord2!(self.x + other.x, self.y + other.y) }
@@ -45,6 +52,18 @@ impl Display for Coord2 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
     }
+}
+
+#[macro_export]
+macro_rules! neighbours4 {
+    ($coord:expr) => {
+        vec![
+            $coord + coord2!(0, 1),
+            $coord + coord2!(0, -1),
+            $coord + coord2!(1, 0),
+            $coord + coord2!(-1, 0),
+        ]
+    };
 }
 
 // pub(crate) type Grid2<'a, T> = Vec<Vec<&'a T>>;
