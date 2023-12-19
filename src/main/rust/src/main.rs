@@ -3,5 +3,5 @@ mod utils;
 mod multi_dimensional;
 
 fn main() {
-    advent2023::day18::solve();
+    advent2023::day19::solve();
 }
