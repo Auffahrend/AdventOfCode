@@ -1,4 +1,5 @@
 use std::collections::{HashMap, VecDeque};
+use num_integer::lcm;
 
 use crate::advent2023::day20::Strength::{HIGH, LOW};
 use crate::utils::{test_and_run, TestVals};
@@ -8,6 +9,37 @@ pub(crate) fn solve() {
 }
 
 fn solution(input: &String) -> i64 {
+    solve2(input)
+}
+
+fn solve2(input: &String) -> i64 {
+    let (mut initial_state, cables) = State::parse(input);
+    let target_pulses = vec![
+        new_pulse(HIGH, "vq".to_string()),
+        new_pulse(HIGH, "sn".to_string()),
+        new_pulse(HIGH, "rf".to_string()),
+        new_pulse(HIGH, "sr".to_string()),
+    ];
+    let mut loop_lens = vec![];
+
+    for target_pulse in target_pulses {
+        let mut state = initial_state.clone();
+        let mut button_presses = 0i64;
+        loop {
+            let pulses = state.press_button(&cables, &target_pulse);
+            button_presses += 1;
+            if pulses == (-1, -1) {
+                println!("found {:?} pulse to target {} after {} steps", target_pulse.str, target_pulse.from, button_presses);
+                loop_lens.push(button_presses);
+                break;
+            }
+        }
+    }
+
+    loop_lens.iter().fold(1i64, |acc, &x| lcm(acc, x))
+}
+
+fn solve1(input: &String) -> i64 {
     let (mut current_state, cables) = State::parse(input);
     let mut states = vec![];
     let mut low_pulses = vec![];
@@ -15,11 +47,11 @@ fn solution(input: &String) -> i64 {
 
     loop {
         states.push(current_state.clone());
-        let pulses = current_state.press_button(&cables);
+        let pulses = current_state.press_button(&cables, &new_pulse(LOW, "rx".to_string()));
         low_pulses.push(pulses.0);
         high_pulses.push(pulses.1);
-        // println!("Step {}: emitted {} + {} pulses", states.len(), pulses.0, pulses.1);
-        if states.contains(&current_state) || states.len() >= CYCLES { break; }
+        println!("Step {}: emitted {} + {} pulses", states.len(), pulses.0, pulses.1);
+        if states.contains(&current_state) { break; }
     }
     let mut offset = 0;
     for i in 0..states.len() {
@@ -32,7 +64,7 @@ fn solution(input: &String) -> i64 {
     let low_pulses_per_loop: i64 = low_pulses.iter().sum();
     let high_pulses_per_loop: i64 = high_pulses.iter().sum();
     (low_pulses_per_loop * n + low_pulses[0..offset].iter().sum::<i64>())
-    * (high_pulses_per_loop * n + high_pulses[0..offset].iter().sum::<i64>())
+        * (high_pulses_per_loop * n + high_pulses[0..offset].iter().sum::<i64>())
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -48,7 +80,7 @@ struct Cables {
 const BUTTON: &str = "button";
 const BROADCAST: &str = "broadcaster";
 impl State {
-    fn press_button(&mut self, cables: &Cables) -> (i64, i64) {
+    fn press_button(&mut self, cables: &Cables, target_pulse: &Pulse) -> (i64, i64) {
         let mut pulses = VecDeque::new();
         let mut total_lows = 0i64;
         let mut total_highs = 0i64;
@@ -60,15 +92,16 @@ impl State {
             } else {
                 total_highs += destinations.len() as i64;
             }
-            destinations.iter()
-                .for_each(|d|
-                    if let Some(module) = self.modules.get_mut(d) {
-                        if let Some(new_p) = module.handle(&pulse) {
-
-                            pulses.push_back(new_p);
+            for d in destinations {
+                if let Some(module) = self.modules.get_mut(d) {
+                    if let Some(new_p) = module.handle(&pulse) {
+                        if new_p.from.contains(&target_pulse.from.clone()) && new_p.str == target_pulse.str {
+                            return (-1, -1)
                         }
+                        pulses.push_back(new_p);
                     }
-                );
+                }
+            }
         }
         (total_lows, total_highs)
     }
