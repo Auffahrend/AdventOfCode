@@ -9,37 +9,30 @@ pub(crate) fn solve() {
 
 fn solution(input: &String) -> i64 {
     let (mut current_state, cables) = State::parse(input);
-    // let mut states = vec![];
-    // let mut low_pulses = vec![];
-    // let mut high_pulses = vec![];
-    let mut button_presses = 0i64;
+    let mut states = vec![];
+    let mut low_pulses = vec![];
+    let mut high_pulses = vec![];
 
     loop {
-        // states.push(current_state.clone());
+        states.push(current_state.clone());
         let pulses = current_state.press_button(&cables);
-        button_presses += 1;
-        if pulses == (-1, -1) {
-            println!("Button pressed {} times", button_presses);
-            return pulses.0 + pulses.1
-        }
-        // low_pulses.push(pulses.0);
-        // high_pulses.push(pulses.1);
+        low_pulses.push(pulses.0);
+        high_pulses.push(pulses.1);
         // println!("Step {}: emitted {} + {} pulses", states.len(), pulses.0, pulses.1);
-        // if states.contains(&current_state) { break; }
+        if states.contains(&current_state) || states.len() >= CYCLES { break; }
     }
-    0
-    // let mut offset = 0;
-    // for i in 0..states.len() {
-    //     if states[i] == current_state {
-    //         offset = i;
-    //         break;
-    //     }
-    // }
-    // let n = (CYCLES / states.len()) as i64;
-    // let low_pulses_per_loop: i64 = low_pulses.iter().sum();
-    // let high_pulses_per_loop: i64 = high_pulses.iter().sum();
-    // (low_pulses_per_loop * n + low_pulses[0..offset].iter().sum::<i64>())
-    // * (high_pulses_per_loop * n + high_pulses[0..offset].iter().sum::<i64>())
+    let mut offset = 0;
+    for i in 0..states.len() {
+        if states[i] == current_state {
+            offset = i;
+            break;
+        }
+    }
+    let n = (CYCLES / states.len()) as i64;
+    let low_pulses_per_loop: i64 = low_pulses.iter().sum();
+    let high_pulses_per_loop: i64 = high_pulses.iter().sum();
+    (low_pulses_per_loop * n + low_pulses[0..offset].iter().sum::<i64>())
+    * (high_pulses_per_loop * n + high_pulses[0..offset].iter().sum::<i64>())
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -67,17 +60,15 @@ impl State {
             } else {
                 total_highs += destinations.len() as i64;
             }
-            for d in destinations {
-                if d.contains("rx") && pulse.str == LOW {
-                    println!("Detected RX!");
-                    return (-1, -1)
-                }
-                if let Some(module) = self.modules.get_mut(d) {
-                    if let Some(new_p) = module.handle(&pulse) {
-                        pulses.push_back(new_p);
+            destinations.iter()
+                .for_each(|d|
+                    if let Some(module) = self.modules.get_mut(d) {
+                        if let Some(new_p) = module.handle(&pulse) {
+
+                            pulses.push_back(new_p);
+                        }
                     }
-                }
-            }
+                );
         }
         (total_lows, total_highs)
     }

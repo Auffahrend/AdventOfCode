@@ -34,14 +34,14 @@ pub fn test_and_run<O>(
     where O: Ord + Display
 {
     let mut start = Instant::now();
-    // if let Some(error) = verify(sol, test1) {
-    //     println!("Test 1 failed: {}", error)
-    // } else { println!("Test 1 succeeded in {} ms", (Instant::now() - start).as_millis()) }
+    if let Some(error) = verify(sol, test1) {
+        println!("Test 1 failed: {}", error)
+    } else { println!("Test 1 succeeded in {} ms", (Instant::now() - start).as_millis()) }
 
-    // start = Instant::now();
-    // if let Some(error) = verify(sol, test2) {
-    //     println!("Test 2 failed: {}", error)
-    // } else { println!("Test 2 succeeded in {} ms", (Instant::now() - start).as_millis()) }
+    start = Instant::now();
+    if let Some(error) = verify(sol, test2) {
+        println!("Test 2 failed: {}", error)
+    } else { println!("Test 2 succeeded in {} ms", (Instant::now() - start).as_millis()) }
 
     start = Instant::now();
     let result = sol(&read_file(file_name).unwrap());
