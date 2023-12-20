@@ -1,4 +1,6 @@
+use std::cmp::{max, min};
 use std::collections::HashMap;
+use std::ops::Range;
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -17,10 +19,43 @@ fn solution(input: &String) -> i64 {
         })
         .collect();
 
-    let parts: Vec<Part> = parts[1].lines().map(|line| Part::parse(line)).collect();
-    accepted_parts(&workflows, &parts).iter()
-        .map(|p| p.x + p.m + p.a + p.s)
+    // part 1
+    // let parts: Vec<Part> = parts[1].lines().map(|line| Part::parse(line)).collect();
+    // accepted_parts(&workflows, &parts).iter()
+    //     .map(|p| p.x + p.m + p.a + p.s)
+    //     .sum()
+
+    // part 2
+    let all_possible = PartInterval { xmas: HashMap::from(
+        [('x', 1..4001), ('m', 1..4001), ('a', 1..4001), ('s', 1..4001)]
+    ) };
+    accepted_intervals(workflows, all_possible).iter()
+        .map(|i| i.size())
         .sum()
+}
+
+fn accepted_intervals(workflows: HashMap<String, Vec<(WfPredicate, String)>>, init: PartInterval) -> Vec<PartInterval> {
+    let mut result: Vec<PartInterval> = vec![];
+    let mut queue: Vec<(PartInterval, String, usize)> = vec![(init, "in".to_string(),0)];
+    while !queue.is_empty() {
+        let (interval, wf_name, step_i) = queue.remove(0);
+        if "A" == wf_name {
+            result.push(interval.clone());
+            println!("{:?} accepted, size {}", interval, interval.size());
+        } else if "R" == wf_name {
+            // println!("Part {:?} rejected", part);
+        } else if !interval.is_empty() {
+            let wf = workflows.get(&wf_name).unwrap();
+            let sub_inters = wf[step_i].0.split(&interval);
+            if sub_inters.len() > 2 { panic!("More than 2 intervals after a condition split") }
+            queue.push((sub_inters[0].clone(), wf[step_i].1.clone(), 0));
+
+            if let Some(other) = sub_inters.get(1) {
+                queue.push((other.clone(), wf_name, step_i + 1));
+            }
+        }
+    }
+    result
 }
 
 fn accepted_parts(workflows: &HashMap<String, Vec<(WfPredicate, String)>>, parts: &Vec<Part>) -> Vec<Part> {
@@ -82,6 +117,16 @@ struct WfPredicate {
 }
 
 impl WfPredicate {
+    fn split(&self, interval: &PartInterval) -> Vec<PartInterval> {
+        match &self.comparison {
+            '_' => vec![interval.clone()],
+            '<' => interval.split_at(self.attribute, self.value, false),
+            '>' => interval.split_at(self.attribute, self.value + 1, true),
+            _ => unreachable!()
+        }
+    }
+
+
     fn test(&self, part: &Part) -> bool {
         match (&self.attribute, &self.comparison) {
             ('_', '_') => true,
@@ -122,6 +167,37 @@ impl Part {
     fn new(x: i64, m: i64, a: i64, s: i64) -> Part {
         Part { x, m, a, s }
     }
+}
+
+#[derive(Clone, Debug)]
+struct PartInterval {
+    xmas: HashMap<char, Range<i64>>,
+}
+
+impl PartInterval {
+    fn is_empty(&self) -> bool {
+        self.xmas.values().any(|r| r.is_empty())
+    }
+
+    fn size(&self) -> i64 {
+        if self.is_empty() { 0i64 }
+        else {
+            self.xmas.values()
+                .map(|r| r.end - r.start)
+                .product()
+        }
+    }
+
+    fn split_at(&self, attribute: char, value: i64, reverse: bool) -> Vec<PartInterval> {
+        let mut i1 = self.clone();
+        i1.xmas.entry(attribute)
+            .and_modify(|i| i.end = min(value, i.end));
+        let mut i2 = self.clone();
+        i2.xmas.entry(attribute)
+            .and_modify(|i| i.start = max(value, i.start));
+        if !reverse { vec![i1, i2] } else { vec![i2, i1] }
+    }
+
 }
 
 const TEST_1: TestVals<&str, i64> = TestVals(&"\
