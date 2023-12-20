@@ -1,3 +1,4 @@
+use crate::{coord2, value_at_coord2};
 use crate::multi_dimensional::{Coord2};
 use crate::utils::{test_and_run, TestVals};
 
@@ -7,7 +8,7 @@ pub(crate) fn solve() {
 
 fn solution(input: &String) -> i64 {
     PipeMap::parse(input)
-        .find_furthers_dist_in_pipe()
+        .area()
 }
 
 struct PipeMap {
@@ -31,13 +32,13 @@ impl PipeMap {
         pipes.iter().enumerate()
             .find(|(y, &ref row)| {
                 if let Some(p) = row.iter().enumerate().find(|(x, &c)| c == 'S') {
-                    start.x = p.0 as isize;
-                    start.y = *y as isize;
+                    start = coord2!(p.0, *y);
                     true
                 } else { false }
             });
-        println!("Found starting point at {:?}", start);
-        pipes[start.y as usize][start.x as usize] = if (pipes.len() == 5) { 'F' } else { '7' };
+        // println!("Found starting point at {:?}", start);
+        pipes[start.y as usize][start.x as usize] = PipeMap::pipe_at_start(&pipes, &start);
+        // println!("Starting pipe identified as {:?}", value_at_coord2!(&start, &pipes));
         PipeMap { start, pipes, distances }
     }
 
@@ -63,14 +64,83 @@ impl PipeMap {
         max_dist
     }
 
+    fn area(&self) -> i64 {
+        let mut first_vertex = coord2!(-1, -1);
+        let mut vertices = vec![];
+        let mut perimeter = 0i64;
+        let mut current = self.start.clone();
+        let mut direction = match value_at_coord2!(&current, &self.pipes) {
+            '7' => coord2!(0, 1),
+            'F' => coord2!(0, 1),
+            '|' => coord2!(0, 1),
+            'L' => coord2!(1, 0),
+            '-' => coord2!(1, 0),
+            'J' => coord2!(-1, 0),
+            _ => unreachable!()
+        };
+        let corners = vec!['J', '7', 'F', 'L'];
+        while current != first_vertex {
+            if first_vertex.x != -1 {
+                perimeter += 1;
+            }
+            let pipe = value_at_coord2!(&current, &self.pipes);
+            if corners.contains(&pipe) {
+                if vertices.is_empty() { first_vertex = current }
+                vertices.push(current);
+                direction = neighbor_offsets(&pipe).iter().find(|&d| *d != -direction).unwrap().clone();
+            } else {
+               // just continue straight
+            }
+
+            current = current + direction;
+        }
+        vertices.push(first_vertex); perimeter += 1;
+        println!("Total vertices+1 {}, total perimeter {}", vertices.len(), perimeter);
+
+        vertices.windows(2)
+            .fold(0isize, |a, pair| a + pair[0].x * pair[1].y - pair[1].x * pair[0].y) as i64
+            - perimeter / 2 - vertices.len() as i64 + 1
+    }
+
     fn dist_at(&self, coord2: Coord2) -> i64 {
         self.distances[coord2.y as usize][coord2.x as usize].clone()
     }
 
     fn pipe_at(&self, coord2: Coord2) -> char {
-        self.pipes[coord2.y as usize][coord2.x as usize].clone()
+        value_at_coord2!(&coord2, &self.pipes)
+    }
+
+    fn pipe_at_start(grid: &Vec<Vec<char>>, start: &Coord2) -> char {
+        let connect_top = if start.y > 0 {
+            grid.get(start.y as usize - 1)
+                .map(|r| vec!['|', '7', 'F'].contains(&r[start.x as usize]))
+                .unwrap_or(false)
+        } else { false };
+        let connect_bottom = grid.get(start.y as usize + 1)
+            .map(|r| vec!['|', 'J', 'L'].contains(&r[start.x as usize]))
+            .unwrap_or(false);
+
+        let connect_left = if start.x > 0 {
+            grid[start.y as usize].get(start.x as usize - 1)
+                .map(|c| vec!['-', 'L', 'F'].contains(c))
+                .unwrap_or(false)
+        } else { false };
+        let connect_right = grid[start.y as usize].get(start.x as usize + 1)
+            .map(|c| vec!['-', '7', 'J'].contains(c))
+            .unwrap_or(false);
+
+        match (connect_left, connect_top, connect_right, connect_bottom) {
+            (true, true, false, false) => 'J',
+            (true, false, true, false) => '-',
+            (true, false, false, true) => '7',
+            (false, true, true, false) => 'L',
+            (false, true, false, true) => '|',
+            (false, false, true, true) => 'F',
+            _ => panic!("Unable to connect the starter pipe! {}, {}, {}, {}", connect_left, connect_top, connect_right, connect_bottom),
+        }
     }
 }
+
 
 fn neighbor_offsets(pipe: &char) -> Vec<Coord2> {
     match pipe {
